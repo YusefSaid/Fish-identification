@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fish Image Upload and Analysis</title>
+    <style>
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .upload-form, .upload-history {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .file-input {
+            margin: 10px 0;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .image-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .image-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .results-container {
+            margin-top: 20px;
+        }
+        .result-item {
+            background-color: #f8f9fa;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Fish Image Upload and Analysis</h1>
+
+    <div class="upload-form">
+        <h2>Upload New Image</h2>
+        <form method="post" action="/upload" enctype="multipart/form-data" id="uploadForm">
+            <div class="file-input">
+                <input type="file" name="file" accept=".jpg,.jpeg,.png" required>
+                <button type="submit">Upload and Analyze</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="upload-history">
+        <h2>Recent Uploads</h2>
+        <div class="image-grid">
+            {% for file in uploaded_files %}
+                <div class="image-item">
+                    <a href="{{ url_for('download_file', filename=file.name) }}">
+                        <img src="{{ url_for('download_file', filename=file.name) }}" alt="{{ file.name }}">
+                        <div class="image-info">
+                            {{ file.name }}<br>
+                            {{ (file.size // 1024)|int }} KB<br>
+                            {{ file.modified|datetime }}
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('result');
+            const formData = new FormData(this);
+
+            try {
+                resultDiv.innerHTML = '<p>Analyzing image...</p>';
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    let resultsHtml = '<h3>Analysis Results:</h3><div class="results-container">';
+                    data.results.forEach(result => {
+                        const distance = result.distance.toFixed(4);
+                        const similarity = ((1 - result.distance) * 100).toFixed(2);
+                        const color = similarity > 90 ? 'green' : similarity > 70 ? 'orange' : 'red';
+
+                        resultsHtml += `
+                            <div class="result-item">
+                                <strong>Comparing with: </strong>${result.filename}<br>
+                                <span style="color: ${color}">
+                                    <strong>Distance: </strong>${distance}<br>
+                                    <strong>Similarity: </strong>${similarity}%
+                                </span>
+                            </div>
+                        `;
+                    });
+                    resultsHtml += '</div>';
+                    resultDiv.innerHTML = resultsHtml;
+                } else {
+                    resultDiv.innerHTML = `<p class="error">Error: ${data.error || data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
