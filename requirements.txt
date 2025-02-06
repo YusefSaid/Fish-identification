@@ -1,0 +1,13 @@
+# python version 3.12.7
+
+# dependencies
+torch
+pillow
+scikit-learn
+torchvision
+
+# dependecies for web-api
+flask
+
+# depencendies for initial design
+matplotlib
