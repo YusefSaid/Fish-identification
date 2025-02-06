@@ -2,6 +2,8 @@
 
 ## Overview
 
+This project was conducted by a group of three members, me and Yngve Magnussen and Christoffer Egill Prag. The project was graded B.
+
 This project focuses on identifying fish species using a Siamese Neural Network (SNN). The network is designed to compare pairs of images and determine their similarity based on learned feature representations. The model is trained on a carefully curated dataset to distinguish between 23 different fish species.
 
 ## src
